@@ -21,6 +21,7 @@ import {
 } from './styles';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
+import profile from '../../../images/profile.png';
 
 export interface Providers {
   id: string;
@@ -62,11 +63,7 @@ const Dashboard: React.FC = () => {
           {user.avatar_url ? (
             <AvatarImage source={{ uri: user.avatar_url }} />
           ) : (
-            <AvatarImage
-              source={{
-                uri: 'https://api.adorable.io/avatars/285/abott@adorable.png',
-              }}
-            />
+            <AvatarImage source={profile} />
           )}
         </AvatarButton>
       </Header>
@@ -82,11 +79,7 @@ const Dashboard: React.FC = () => {
             {provider.avatar_url ? (
               <ProviderAvatar source={{ uri: provider.avatar_url }} />
             ) : (
-              <ProviderAvatar
-                source={{
-                  uri: 'https://api.adorable.io/avatars/285/abott@adorable.png',
-                }}
-              />
+              <ProviderAvatar source={profile} />
             )}
             <ProviderInfo>
               <ProviderName>{provider.name}</ProviderName>

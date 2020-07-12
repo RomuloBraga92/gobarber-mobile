@@ -12,6 +12,7 @@ import { Form } from '@unform/mobile';
 import { FormHandles } from '@unform/core';
 import * as Yup from 'yup';
 import Icon from 'react-native-vector-icons/Feather';
+import ImagePicker from 'react-native-image-picker';
 
 import {
   Container,
@@ -25,6 +26,7 @@ import Button from '../../components/Button';
 import getValidationErrors from '../../utils/getValidationErrors';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import profile from '../../../images/profile.png';
 
 interface ProfileFormData {
   name: string;
@@ -55,7 +57,7 @@ const Profile: React.FC = () => {
             .email('Digite um e-mail válido'),
           old_password: Yup.string(),
           password: Yup.string().when('old_password', {
-            is: val => !!val.length,
+            is: val => val?.length,
             then: Yup.string()
               .required('Nova senha obrigatório')
               .min(6, 'Mínimo de 6 dígitos'),
@@ -63,7 +65,7 @@ const Profile: React.FC = () => {
           }),
           confirmPassword: Yup.string()
             .when('old_password', {
-              is: val => !!val.length,
+              is: val => val?.length,
               then: Yup.string()
                 .required('Confirmação de senha obrigatório')
                 .min(6, 'Mínimo de 6 dígitos'),
@@ -118,6 +120,39 @@ const Profile: React.FC = () => {
     [navigation, updateUser],
   );
 
+  const handleUpdateAvatar = useCallback(() => {
+    ImagePicker.showImagePicker(
+      {
+        title: 'Selecione um avatar',
+        cancelButtonTitle: 'Cancelar',
+        takePhotoButtonTitle: 'Usar câmera',
+        chooseFromLibraryButtonTitle: 'Escolhe da galeria',
+      },
+      response => {
+        if (response.didCancel) {
+          return;
+        }
+
+        if (response.error) {
+          Alert.alert('Erro ao atualizar seu avatar');
+          return;
+        }
+
+        const data = new FormData();
+
+        data.append('avatar', {
+          type: 'image/jpeg',
+          name: `${user.id}.jpg`,
+          uri: response.uri,
+        });
+
+        api.patch('users/avatar', data).then(apiResponse => {
+          updateUser(apiResponse.data);
+        });
+      },
+    );
+  }, [updateUser, user.id]);
+
   const handleGoBack = useCallback(() => {
     navigation.goBack();
   }, [navigation]);
@@ -138,15 +173,23 @@ const Profile: React.FC = () => {
               <Icon name="chevron-left" size={24} color="#999591" />
             </BackButton>
 
-            <UserAvatarButton onPress={() => {}}>
-              <UserAvatar source={{ uri: user.avatar_url }} />
+            <UserAvatarButton onPress={handleUpdateAvatar}>
+              {user.avatar_url ? (
+                <UserAvatar source={{ uri: user.avatar_url }} />
+              ) : (
+                <UserAvatar source={profile} />
+              )}
             </UserAvatarButton>
 
             <View>
               <Title>Meu perfil</Title>
             </View>
 
-            <Form ref={formRef} onSubmit={handleProfile} initialData={user}>
+            <Form
+              ref={formRef}
+              onSubmit={handleProfile}
+              initialData={{ name: user.name, email: user.email }}
+            >
               <Input
                 autoCorrect={false}
                 autoCapitalize="words"
